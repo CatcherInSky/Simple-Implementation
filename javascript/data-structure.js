@@ -251,28 +251,32 @@ class BinarySearchTree extends Tree {
 // ● 父节点位置是 (index - 1) / 2 。
 class Heap {
   constructor(arr) {
-    const build = (arr) => {
-      class Node {
-        constructor(value) {
-          this.value = value;
-          this.left = null;
-          this.right = null;
-        }
-      };
-      const map = new Map();
-      arr.forEach((value, index) => {
-        const node = new Node(value);
-        map.set(index, node)
-        let father = Math.floor((index - 1) / 2)
-        if(father < 0) {
-          this.root = node
-        } else {
-          const position = father === (index - 1) / 2 ? 'left' : 'right'
-          map.get(father)[position] = new Node(value)
-        }
-      })
-    }
-    this.root = build(arr);
+    // 构造完全二叉树
+    this.root = this.build(arr);
+  }
+  build(arr) {
+    class Node {
+      constructor(value) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
+      }
+    };
+    const map = new Map();
+    let head = null;
+    arr.forEach((value, index) => {
+      const node = new Node(value);
+      map.set(index, node)
+      let father = Math.floor((index - 1) / 2)
+      if(father < 0) {
+        head = node
+      } else {
+        const position = father === (index - 1) / 2 ? 'left' : 'right'
+        map.get(father)[position] = node
+      }
+    })
+    return head;
+
   }
 }
 // 最大堆 所有子节点小于父节点
