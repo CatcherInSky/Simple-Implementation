@@ -3,43 +3,43 @@
 // 栈 后进先出
 class Stack {
   constructor() {
-    this.data = [];
+    this.value = [];
   }
   push(value) {
-    return this.data.push(value);
+    return this.value.push(value);
   }
   pop() {
-    return this.data.pop();
+    return this.value.pop();
   }
   size() {
-    return this.data.length;
+    return this.value.length;
   }
   isEmpty() {
-    return !this.data.length;
+    return !this.value.length;
   }
   clear() {
-    this.data = [];
+    this.value = [];
   }
 }
 // 队列 先进先出
 class Queue {
   constructor() {
-    this.data = [];
+    this.value = [];
   }
   enqueue(value) {
-    return this.data.push(value);
+    return this.value.push(value);
   }
   shift() {
-    return this.data.shift();
+    return this.value.shift();
   }
   size() {
-    return this.data.length;
+    return this.value.length;
   }
   isEmpty() {
-    return !this.data.length;
+    return !this.value.length;
   }
   clear() {
-    this.data = [];
+    this.value = [];
   }
 }
 // 链表
@@ -156,6 +156,11 @@ class LinkedList {
     return true;
   }
 }
+// 双向链表
+
+// 循环链表
+
+
 // 二叉树
 class Tree {
   constructor() {
@@ -309,7 +314,7 @@ class Graph {
 
     this.adjList.get(a).push(b); // 在顶点a中添加指向顶点b的边
     this.adjList.get(b).push(a); // 在顶点b中添加指向顶点a的边
-  
+  }
   // 广度优先 BFS
 
 
@@ -318,7 +323,64 @@ class Graph {
 }
 // 集合
 class _Set {
-
+  constructor() {
+    // 对象不允许一个键指向两个不同的属性，保证了集合里的元素都是唯一的
+    this.value = {};
+  }
+  has(value) {
+    return this.hasOwnProperty(value)
+  }
+  add(value) {
+    if(this.has(value)) {
+      return false
+    } else {
+      // 同时作为键和值保存方便检索
+      this.value[value] = value;
+      return true
+    }
+  }
+  remove() {
+    if(this.has(value)) {
+      delete this.value[value];
+      return true
+    } else {
+      return false
+    }
+  }
+  clear() {
+    this.value = {}
+  }
+  size() {
+    return Object.keys(this.value).length
+  }
+  values() {
+    return Object.values(this.value);
+  }
+  // 并集
+  union(otherSet) {
+    const unionSet = new _Set();
+    this.values().forEach(value => unionSet.add(value))
+    otherSet.values().forEach(value => unionSet.add(value))
+    return unionSet;
+  }
+  // 交集
+  intersection(otherSet) {
+    const intersectionSet = new _Set();
+    this.values().forEach(value => otherSet.has(value) && intersectionSet.add(value))
+    return intersectionSet;
+  }
+  // 差集
+  difference(otherSet) {
+    const differenceSet = new _Set();
+    this.values().forEach(value => otherSet.has(value) || intersectionSet.add(value))
+    return differenceSet;
+  }
+  // 子集
+  subset(otherSet) {
+    this.size() > otherSet.size()
+      ? false
+      : this.values().every(value => otherSet.has(value));
+  }
 }
 // 弱集合
 class _WeekSet {
@@ -326,8 +388,42 @@ class _WeekSet {
 }
 // 字典 Dictionary
 class _Map {
-
+  constructor() {
+    // 对象不允许一个键指向两个不同的属性，保证了集合里的元素都是唯一的
+    this.value = {};
+  }
+  has(key) {
+    this.value.hasOwnProperty(key)
+  }
+  set(key, value) {
+    this.value[key] = value;
+  }
+  get(key) {
+    return this.has(key) ? this.value[key] : undefined;
+  }
+  delete(key) {
+    if(this.has(key)) {
+      delete this.value[key];
+      return true
+    } else {
+      return false
+    }
+  }
+  clear() {
+    this.value = {}
+  }
+  keys() {
+    return Object.values(this.value);
+  }
+  size() {
+    return this.keys().length
+  }
+  values() {
+    return Object.values(this.value);
+  }
 }
+// 散列表
+
 // 弱字典
 class _WeekMap {
 
