@@ -3,43 +3,43 @@
 // 栈 后进先出
 class Stack {
   constructor() {
-    this.value = [];
+    this.data = [];
   }
   push(value) {
-    return this.value.push(value);
+    return this.data.push(value);
   }
   pop() {
-    return this.value.pop();
+    return this.data.pop();
   }
   size() {
-    return this.value.length;
+    return this.data.length;
   }
   isEmpty() {
-    return !this.value.length;
+    return !this.data.length;
   }
   clear() {
-    this.value = [];
+    this.data = [];
   }
 }
 // 队列 先进先出
 class Queue {
   constructor() {
-    this.value = [];
+    this.data = [];
   }
   enqueue(value) {
-    return this.value.push(value);
+    return this.data.push(value);
   }
-  shift() {
-    return this.value.shift();
+  dequeue() {
+    return this.data.shift();
   }
   size() {
-    return this.value.length;
+    return this.data.length;
   }
   isEmpty() {
-    return !this.value.length;
+    return !this.data.length;
   }
   clear() {
-    this.value = [];
+    this.data = [];
   }
 }
 // 链表
@@ -156,11 +156,6 @@ class LinkedList {
     return true;
   }
 }
-// 双向链表
-
-// 循环链表
-
-
 // 二叉树
 class Tree {
   constructor() {
@@ -281,7 +276,6 @@ class Heap {
       }
     })
     return head;
-
   }
 }
 // 最大堆 所有子节点小于父节点
@@ -319,7 +313,6 @@ class Graph {
 
 
   // 深度优先 DFS
-
 }
 // 集合
 class _Set {
@@ -422,8 +415,6 @@ class _Map {
     return Object.values(this.value);
   }
 }
-// 散列表
-
 // 弱字典
 class _WeekMap {
 
