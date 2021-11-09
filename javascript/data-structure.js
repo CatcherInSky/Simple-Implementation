@@ -307,15 +307,10 @@ class LinarHashTable extends HashTable {
   }
   // 查
   get(key) {
-    const {value, loseloseHashCode} = this;
-    let position = loseloseHashCode(key);
-    while(value[position] !== undefined && value[position].key !== key) {
-      position ++;
-    }
-    const element = value[position];
-    return element 
-      ? element.value
-      : undefined;
+    const position = this.findPosition(key);
+    return position === -1
+      ? undefined
+      : this.value[position].value
   }
   findPosition(key) {
     const {value, loseloseHashCode} = this;
@@ -345,66 +340,7 @@ class LinkedList {
     this.head = null;
     this.length = 0; 
   }
-  // 增
-  // 递归寻找末端
-  append(value) {
-    const {Node} = this;
-    const node = new Node(value);
-    // 当前指针
-    let current = null;
-    if(this.head == null) {
-      this.head = node;
-    } else {
-      current = this.head;
-      while(current.next) {
-        current = current.next;
-      }
-      current.next = node;
-    }
-    this.length ++;
-  }
-  insert(position, value) {
-    const {Node} = this;
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return false;
-    }
-    const node = new Node(value);
-    if(position === 0) {
-    	const current = this.head;
-      node.next = current;
-      this.head = node;
-    } else {
-      const previous = this.find(position - 1), current = previous.next;
-      node.next = current;
-      previous.next = node;
-    }
-    this.length ++;
-    return true;
-  }
-  // 删
-  removeAt(position) {
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return false;
-    }
-    let current = this.head, previous = null, index = 0;
-    if(position === 0) {
-      this.head = current.next;
-    } else {
-      while(index ++ < position) {
-        previous = current;
-        current = current.next;
-      }
-      previous.next = current.next;
-    }
-    this.length --;
-    return true;
-  }
-  remove(value) {
-    return this.removeAt(this.findPosition(value));
-  }
-  // 查
+  // 查位置
   findPosition(value) {
     let current = this.head, index = -1;
     while(current) {
@@ -419,8 +355,8 @@ class LinkedList {
   }
   // 查值
   find(position) {
-  	if(position < 0 || position > this.length) {
-      return;
+  	if(position < 0 || position > this.length - 1) {
+      return undefined;
     }
     if(position === 0) {
       return this.head;
@@ -432,6 +368,52 @@ class LinkedList {
       }
       return current;
     }
+  }
+  // 增
+  // 递归寻找末端
+  append(value) {
+    return this.insert(this.length, value);
+  }
+  insert(position, value) {
+    const {Node} = this;
+    if(position < 0 || position > this.length) {
+      // 溢出
+      return false;
+    }
+    const node = new Node(value);
+    if(position === 0) {
+    	const current = this.head;
+      node.next = current;
+      this.head = node;
+    } else {
+      // 0 1 2 在1位置插入3 -> 0 3 1 2?
+      const previous = this.find(position - 1), current = previous.next;
+      node.next = current;
+      previous.next = node;
+    }
+    this.length ++;
+    return true;
+  }
+  // 删
+  removeAt(position) {
+    if(position < 0 || position > this.length) {
+      // 溢出
+      return null;
+    }
+    if(position === 0) {
+      const current = this.head;
+      this.head = current.next;
+      this.length --;
+      return current;
+    } else {
+      const previous = this.find(position - 1), current = previous.next;
+      previous.next = current.next;
+      this.length --;
+      return current;
+    }
+  }
+  remove(value) {
+    return this.removeAt(this.findPosition(value));
   }
   size() {
     return this.length;
@@ -455,9 +437,156 @@ class LinkedList {
   }
 }
 // 双向链表
-
+class DoublyLinkedList extends LinkedList{
+  constructor() {
+    super();
+    this.Node = class Node {
+      constructor(value, prev, next) {
+        this.value = value;
+        this.next = next;
+        this.prev = prev;
+      }
+    };
+    this.head = null;
+    this.tail = null;
+    this.length = 0; 
+  }
+  connet(previous, next) {
+    previous.next = next;
+    next.prev = previous;
+  }
+  insert(position, value) {
+    const { head, tail, length, Node, connet, find} = this;   
+    if(position < 0 || position > length) {
+      // 溢出
+      return false;
+    }
+    const node = new Node(value);
+    if(position === 0) {
+      // 添加在开头有两种情况
+      if(this.length === 0) {
+        // 空链表
+        this.tail = node;
+        this.head = node;
+      } else {
+        // 有值的链表
+        connet(node, head)
+        this.head = node;
+      }
+    } else if(position === length) {
+      // 添加在末尾
+      connet(tail, node);
+      this.tail = node
+    } else {
+      // 0 1 2 在1位置插入3 -> 0 3 1 2?
+      const current = find(position), previous = current.prev;
+      connet(previous, node)
+      connet(node, current)
+    }
+    this.length ++;
+    return true;
+  }
+  removeAt(position) {
+    if(position < 0 || position > this.length) {
+      // 溢出
+      return null;
+    }
+    const {head, tail, length, connet} = this;
+    if(position === 0) {
+      this.head = head.next;
+      if(length === 1) {
+        this.tail = head.next;
+      } else {
+        this.head.prev = null;
+      }
+      this.length --;
+      return head;
+    } else if(position === length - 1) {
+      this.tail = tail.prev;
+      this.tail.next = null;
+      this.length --;
+      return tail
+    } else {
+      const current = find(position), previous = current.prev;
+      connet(previous, current.next)
+      this.length --;
+      return current
+    }
+  }
+}
 // 循环链表
-
+class CircleLinkedList extends DoublyLinkedList {
+  constructor() {
+    super();
+  }
+  circle() {
+    const {head, tail} = this;
+    head.prev = tail;
+    tail.next = head;
+  }
+  insert(position, value) {
+    const { head, tail, length, Node, connet, find, circle} = this;   
+    if(position < 0 || position > length) {
+      // 溢出
+      return false;
+    }
+    const node = new Node(value);
+    if(position === 0) {
+      // 添加在开头有两种情况
+      if(this.length === 0) {
+        // 空链表
+        this.tail = node;
+        this.head = node;
+      } else {
+        // 有值的链表
+        connet(node, head)
+        this.head = node;
+      }
+      circle()
+    } else if(position === length) {
+      // 添加在末尾
+      connet(tail, node);
+      this.tail = node
+      circle()
+    } else {
+      // 0 1 2 在1位置插入3 -> 0 3 1 2?
+      const current = find(position), previous = current.prev;
+      connet(previous, node)
+      connet(node, current)
+    }
+    this.length ++;
+    return true;
+  }
+  removeAt(position) {
+    if(position < 0 || position > this.length) {
+      // 溢出
+      return null;
+    }
+    const {head, tail, length, connet, circle} = this;
+    if(position === 0) {
+      this.head = head.next;
+      if(length === 1) {
+        this.tail = head.next;
+      } else {
+        this.head.prev = null;
+      }
+      this.length --;
+      circle()
+      return head;
+    } else if(position === length - 1) {
+      this.tail = tail.prev;
+      this.tail.next = null;
+      this.length --;
+      circle()
+      return tail
+    } else {
+      const current = find(position), previous = current.prev;
+      connet(previous, current.next)
+      this.length --;
+      return current
+    }
+  }
+}
 
 // 二叉树
 class Tree {
