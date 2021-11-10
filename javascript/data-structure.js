@@ -23,7 +23,12 @@ class Stack {
   isEmpty() {
     return !this.value.length;
   }
+  // 以防修改
+  values() {
+    return this.value.concat([]);
+  }
 }
+
 // 队列 先进先出
 class Queue {
   constructor() {
@@ -47,6 +52,9 @@ class Queue {
   isEmpty() {
     return !this.value.length;
   }
+  values() {
+    return this.value.concat([]);
+  }
 }
 class PriorityQueue extends Queue {
   constructor() {
@@ -59,19 +67,24 @@ class PriorityQueue extends Queue {
       }
     };
   }
-  // 优先级规则
+  // 优先级规则 返回true为高优先级
   superior(a = 0, b = 0) {
     return a > b;
   }
   enqueue(value, priority) {
     const {value: queue, Element, superior} = this;
   	let element = new Element(value, priority);
-    let index = queue.findIndex(item => superior(item.priority, priority));
-    typeof index === 'number' ? queue.splice(index, 0, element) : queue.push(element);  
+    let index = queue.findIndex(item => superior(priority, item.priority));
+    index > -1 
+      ? queue.splice(index, 0, element) 
+      :  queue.push(element);  
   }
   dequeue() {
     const res = this.value.shift();
     return res && res.value; 
+  }
+  values() {
+    return this.value.map(it => it.value);
   }
 }
 function hotPotato(list, num) {
@@ -219,10 +232,15 @@ class HashTable {
   }
   // 查
   get(key) {
-  	return this.has(key) && this.value[this.loseloseHashCode(key)];
+  	return this.has(key) ? this.value[this.loseloseHashCode(key)] : undefined;
   }
   has(key) {
-    this.value.hasOwnProperty(this.loseloseHashCode(key));
+    return this.value.hasOwnProperty(this.loseloseHashCode(key));
+  }
+  values() {
+    return this.value.reduce((acc, cur, index) => {
+      return `${acc} ${index}: ${cur};\n`;
+    }, ``);
   }
 }
 // 分离链接
@@ -237,6 +255,9 @@ class LikedHashTable extends HashTable {
     };
     // 自定义链表的findPosition方法
     this._LinkedList = class _LinkedList extends LinkedList {
+      constructor() {
+        super();
+      }
     	findPosition(key) {
         let current = this.head, index = -1;
         while(current) {
@@ -247,31 +268,81 @@ class LikedHashTable extends HashTable {
           index ++;
           current = current.next;
         }
-        return index;
+        return -1;
+      }
+      findValue(key) {
+        let current = this.head;
+        while(current) {
+          if(current.value.key === key) {
+            return current.value.value;
+          }
+          current = current.next;
+        }
+        return undefined;
+      }
+      values(symbol = '->') {
+        let current = this.head, values = [];
+        while(current) {
+          values.push(`${current.value.key} + ${current.value.value}`);
+          current = current.next;
+        }
+        return values.join(symbol);
       }
     };
   }
   // 增
   set(key, value) {
-    const {Node, _LinkedList} = this;
-    const element = this.value[this.loseloseHashCode(key)];
-    this.has(key) || (element = new _LinkedList());
-    element.append(new Node(key, value));
+    const {value: table, Node, _LinkedList, loseloseHashCode} = this;
+    if(this.has(key)) {
+      return false;
+    } else {
+      const position = loseloseHashCode(key);
+      if(!table[position]) {
+        table[position] = new _LinkedList();
+      }
+      table[position].append(new Node(key, value));
+      return true;
+    }
   }
   // 删
   delete(key) {
-    const element = this.value[this.loseloseHashCode(key)];
+    const {value, loseloseHashCode} = this;
+    const element = value[loseloseHashCode(key)];
     return element
       ? element.remove(key)
-    	: false;
+    	: null;
   }
   // 查
   get(key) {
-    const element = this.value[this.loseloseHashCode(key)];
-    return element.find(element.findIndex(key));
+    const {value, loseloseHashCode} = this;
+    const element = value[loseloseHashCode(key)];
+    return element 
+      ? element.findValue(key)
+      : null;
   }
   has(key) {
-    return !!this.get(key);
+    const {value, loseloseHashCode} = this;
+    const element = value[loseloseHashCode(key)];
+    return element 
+      ? element.findPosition(key) > -1
+      : false;
+  }
+  // 改
+  update(key, value) {
+    const {value: table, Node, loseloseHashCode} = this;
+    if(this.has(key)) {
+      const element = table[loseloseHashCode(key)];
+      element.update(element.findPosition(key), new Node(key, value));
+    } else {
+      return false;
+    }
+  }
+  values() {
+    return this.value.reduce((acc, cur, index) => {
+      return `${acc} ${index}: ${
+        cur.values()
+      };\n`;
+    }, ``);
   }
 }
 // 线性探查
@@ -285,14 +356,25 @@ class LinarHashTable extends HashTable {
       }
     };
   }
-  // 增
-  set(key, value) {
-    const {Node} = this;
-    let position = this.loseloseHashCode(key);
-    while(this.value[position] !== undefined) {
+  findPosition(key) {
+    const {value, loseloseHashCode} = this;
+    let position = loseloseHashCode(key);
+    // 假如因为删除导致空挡，但要查找的值在空挡下方，怎么办？
+    while(value[position] !== undefined && value[position].key !== key) {
       position ++;
     }
-  	this.value[position] = new Node(key, value);
+    return value[position] 
+      ? position
+      : -1;
+  }
+  // 增
+  set(key, value) {
+    const {value: table, Node, loseloseHashCode} = this;
+    let position = loseloseHashCode(key);
+    while(table[position] !== undefined && table[position].key !== key) {
+      position ++;
+    }
+  	table[position] = new Node(key, value);
   }
   // 删
   delete(key) {
@@ -310,21 +392,15 @@ class LinarHashTable extends HashTable {
     const position = this.findPosition(key);
     return position === -1
       ? undefined
-      : this.value[position].value
-  }
-  findPosition(key) {
-    const {value, loseloseHashCode} = this;
-    let position = loseloseHashCode(key);
-    while(value[position] !== undefined && value[position].key !== key) {
-      position ++;
-    }
-    const element = value[position];
-    return element 
-      ? position
-      : -1;
+      : this.value[position].value;
   }
   has(key) {
-    return !!this.get(key);
+    return this.findPosition(key) !== -1;
+  }
+  values() {
+    return this.value.reduce((acc, cur, index) => {
+      return `${acc} ${index}: ${cur.key} + ${cur.value};\n`;
+    }, ``);
   }
 }
 // 链表
@@ -351,23 +427,19 @@ class LinkedList {
       index ++;
       current = current.next;
     }
-    return current ? index : -1;
+    return -1;
   }
   // 查值
   find(position) {
-  	if(position < 0 || position > this.length - 1) {
-      return undefined;
+  	if(typeof position !== 'number' || isNaN(position) || position < 0 || position > this.length - 1) {
+      // 溢出
+      return null;
     }
-    if(position === 0) {
-      return this.head;
-    } else {
-    	let current = this.head, previous, index = 0;
-      while(index ++ < position) {
-        previous = current;
-        current = current.next;
-      }
-      return current;
+    let current = this.head, index = 0;
+    while(index ++ < position) {
+      current = current.next;
     }
+    return current;
   }
   // 增
   // 递归寻找末端
@@ -376,10 +448,6 @@ class LinkedList {
   }
   insert(position, value) {
     const {Node} = this;
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return false;
-    }
     const node = new Node(value);
     if(position === 0) {
     	const current = this.head;
@@ -387,8 +455,11 @@ class LinkedList {
       this.head = node;
     } else {
       // 0 1 2 在1位置插入3 -> 0 3 1 2?
-      const previous = this.find(position - 1), current = previous.next;
-      node.next = current;
+      const previous = this.find(position - 1);
+      if(!previous) {
+        return false;
+      }
+      node.next = previous.next;
       previous.next = node;
     }
     this.length ++;
@@ -396,21 +467,19 @@ class LinkedList {
   }
   // 删
   removeAt(position) {
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return null;
-    }
+    let current = this.head;
     if(position === 0) {
-      const current = this.head;
       this.head = current.next;
-      this.length --;
-      return current;
     } else {
-      const previous = this.find(position - 1), current = previous.next;
+      const previous = this.find(position - 1);
+      if(!previous) {
+        return null;
+      }
+      current = previous.next;
       previous.next = current.next;
-      this.length --;
-      return current;
     }
+    this.length --;
+    return current;
   }
   remove(value) {
     return this.removeAt(this.findPosition(value));
@@ -421,12 +490,16 @@ class LinkedList {
   isEmpty() {
     return !this.length;
   }
+  values(symbol = '->') {
+    let current = this.head, values = [];
+    while(current) {
+      values.push(current.value);
+      current = current.next;
+    }
+    return values.join(symbol);
+  }
   // 改
   update(position, value) {
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return false;
-    }
     const node = this.find(position);
     if(node) {
       node.value = value;
@@ -437,7 +510,7 @@ class LinkedList {
   }
 }
 // 双向链表
-class DoublyLinkedList extends LinkedList{
+class DoublyLinkedList extends LinkedList {
   constructor() {
     super();
     this.Node = class Node {
@@ -456,11 +529,7 @@ class DoublyLinkedList extends LinkedList{
     next.prev = previous;
   }
   insert(position, value) {
-    const { head, tail, length, Node, connet, find} = this;   
-    if(position < 0 || position > length) {
-      // 溢出
-      return false;
-    }
+    const {head, tail, length, Node, connet, find} = this;
     const node = new Node(value);
     if(position === 0) {
       // 添加在开头有两种情况
@@ -470,28 +539,27 @@ class DoublyLinkedList extends LinkedList{
         this.head = node;
       } else {
         // 有值的链表
-        connet(node, head)
+        connet(node, head);
         this.head = node;
       }
     } else if(position === length) {
       // 添加在末尾
       connet(tail, node);
-      this.tail = node
+      this.tail = node;
     } else {
-      // 0 1 2 在1位置插入3 -> 0 3 1 2?
-      const current = find(position), previous = current.prev;
-      connet(previous, node)
-      connet(node, current)
+      // find里面调用this, 不通过this.find调用存在this指向问题
+      const current = find.call(this, position);
+      if(!current) {
+        return false;
+      }
+      connet(current.prev, node);
+      connet(node, current);
     }
     this.length ++;
     return true;
   }
   removeAt(position) {
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return null;
-    }
-    const {head, tail, length, connet} = this;
+    const {head, tail, length, connet, find} = this;
     if(position === 0) {
       this.head = head.next;
       if(length === 1) {
@@ -505,12 +573,15 @@ class DoublyLinkedList extends LinkedList{
       this.tail = tail.prev;
       this.tail.next = null;
       this.length --;
-      return tail
+      return tail;
     } else {
-      const current = find(position), previous = current.prev;
-      connet(previous, current.next)
+      const current = find.call(this, position);
+      if(!current) {
+        return null;
+      }
+      connet(current.prev, current.next);
       this.length --;
-      return current
+      return current;
     }
   }
 }
@@ -525,11 +596,7 @@ class CircleLinkedList extends DoublyLinkedList {
     tail.next = head;
   }
   insert(position, value) {
-    const { head, tail, length, Node, connet, find, circle} = this;   
-    if(position < 0 || position > length) {
-      // 溢出
-      return false;
-    }
+    const { head, tail, length, Node, connet, find, circle} = this;
     const node = new Node(value);
     if(position === 0) {
       // 添加在开头有两种情况
@@ -539,30 +606,28 @@ class CircleLinkedList extends DoublyLinkedList {
         this.head = node;
       } else {
         // 有值的链表
-        connet(node, head)
+        connet(node, head);
         this.head = node;
       }
-      circle()
+      circle.call(this);
     } else if(position === length) {
       // 添加在末尾
       connet(tail, node);
-      this.tail = node
-      circle()
+      this.tail = node;
+      circle.call(this);
     } else {
-      // 0 1 2 在1位置插入3 -> 0 3 1 2?
-      const current = find(position), previous = current.prev;
-      connet(previous, node)
-      connet(node, current)
+      const current = find.call(this, position);
+      if(!current) {
+        return false;
+      }
+      connet(current.prev, node);
+      connet(node, current);
     }
     this.length ++;
     return true;
   }
   removeAt(position) {
-    if(position < 0 || position > this.length) {
-      // 溢出
-      return null;
-    }
-    const {head, tail, length, connet, circle} = this;
+    const {head, tail, length, connet, circle, find} = this;
     if(position === 0) {
       this.head = head.next;
       if(length === 1) {
@@ -571,20 +636,44 @@ class CircleLinkedList extends DoublyLinkedList {
         this.head.prev = null;
       }
       this.length --;
-      circle()
+      circle.call(this);
       return head;
     } else if(position === length - 1) {
       this.tail = tail.prev;
       this.tail.next = null;
       this.length --;
-      circle()
-      return tail
+      circle.call(this);
+      return tail;
     } else {
-      const current = find(position), previous = current.prev;
-      connet(previous, current.next)
+      const current = find.call(this, position);
+      if(!current) {
+        return null;
+      }
+      connet(current.prev, current.next);
       this.length --;
-      return current
+      return current;
     }
+  }
+  // 避免死循环重写
+  findPosition(value) {
+    let current = this.head, index = -1;
+    while(current && index < this.length) {
+      // 只能对比基本类型和地址相同的引用类型
+      if(current.value === value) {
+        return index + 1;
+      }
+      index ++;
+      current = current.next;
+    }
+    return current && index < this.length ? index : -1;
+  }
+  values(symbol = '->') {
+    let current = this.head, values = [], index = this.length;
+    while(index -- > 0) {
+      values.push(current.value);
+      current = current.next;
+    }
+    return values.join(symbol);
   }
 }
 
@@ -810,6 +899,13 @@ class Graph {
     this.adjList.get(a).push(b); // 在顶点a中添加指向顶点b的边
     this.adjList.get(b).push(a); // 在顶点b中添加指向顶点a的边
   }
+  // 可视化
+  values() {
+    return Array.from(this.vertices).reduce((acc, v) => {
+      return `${acc}${v} -> ${this.adjList.get(v).map(e => `${e}`).join(' ')} \n`;
+    }, ``);
+  }
+
   initHistory(vertices) {
     // 0 未访问 1 已访问未探索 2 已探索
     const map = new Map();
