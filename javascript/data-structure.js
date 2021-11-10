@@ -399,7 +399,7 @@ class LinarHashTable extends HashTable {
   }
   values() {
     return this.value.reduce((acc, cur, index) => {
-      return `${acc} ${index}: ${cur.key} + ${cur.value};\n`;
+      return `${acc} ${index}: ${cur ? cur.key + '+' + cur.value : ''};\n`;
     }, ``);
   }
 }
