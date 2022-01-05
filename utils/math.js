@@ -1,4 +1,24 @@
-// webpack 编译后变量名会被修改 函数相互引用存在问题
+// 大数相加
+function add(a, b) {
+  a = a.toString().split('').reverse();
+  b = b.toString().split('').reverse();
+  let max = Math.max(a.length, b.length) + 1, extra = 0, stack = [];
+  for(let i = 0; i < max; i ++) {
+    let A = isNaN(Number(a[i])) ? 0 : Number(a[i]), 
+      B = isNaN(Number(b[i])) ? 0 : Number(b[i]);
+    const res =  A + B + extra + '';
+    if(res.length > 1) {
+      stack.unshift(res.charAt(1));
+      extra = Number(res.charAt(0));
+    } else {
+      stack.unshift(res);
+      extra = 0;
+    }
+  }
+  const r = stack.join('');
+  return r.charAt(0) === '0' ? r.slice(1) : r;
+}
+
 export const add = (a,b) => {
   var r1,r2,m;   
   try {
