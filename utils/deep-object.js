@@ -20,6 +20,7 @@ export const deepClone = (target, map = new WeakMap()) => {
     map.set(target,true);
     const cloneTarget = type === 'array' ? [] : {};
     for(let prop in target) {
+      //  in 运算符不同，hasOwnProperty会忽略掉从原型链上继承的属性
       if(target.hasOwnProperty(prop)) {
         cloneTarget[prop] = deepClone(target[prop], map);
       }
