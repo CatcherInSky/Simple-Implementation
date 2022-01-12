@@ -52,5 +52,11 @@ Function.prototype.bind2 = function(context) {
 };
 
 // new 关键字
+function new2(Con, ...args) {
+  let obj = {}
+  Object.setPrototypeOf(obj, Con.prototype)
+  let result = Con.apply(obj, args)
+  return result instanceof Object ? result : obj
+}
 
 // instanceof 
