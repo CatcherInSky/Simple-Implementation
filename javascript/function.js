@@ -51,6 +51,19 @@ Function.prototype.bind2 = function(context) {
   return fBound;
 };
 
+Function.prototype.bind_ = function (obj) {
+    //第0位是this，所以得从第一位开始裁剪
+    var args = Array.prototype.slice.call(arguments, 1);
+    var fn = this;
+    return function () {
+        //二次调用我们也抓取arguments对象
+        var params = Array.prototype.slice.call(arguments);
+        //注意concat的顺序
+        fn.apply(obj, args.concat(params));
+    };
+};
+
+
 // new 关键字
 function new2(Con, ...args) {
   let obj = {}
@@ -60,3 +73,11 @@ function new2(Con, ...args) {
 }
 
 // instanceof 
+function instanceof(obj, fn) {
+  let proto = obj.__proto__ 
+  while(proto) {
+    if(fn.prototype === proto) return true;
+    proto = obj.__proto__
+  }
+  return false
+}
