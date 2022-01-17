@@ -1,0 +1,39 @@
+// lru 简单版本
+ var LRUCache = function(capacity) {
+  this.map = {};
+  this.stack = {};
+  this.capacity = capacity;
+
+};
+LRUCache.prototype.get = function(key) {
+  if(this.map[key]) {
+    this.stack[key] = Date.now(); 
+    console.log('get', this.stack, this.map);
+    return this.map[key];
+  } else {
+    console.log('get', this.stack, this.map);
+    return -1;
+  }
+};
+LRUCache.prototype.put = function(key, value) {
+  const keys = Object.keys(this.map);
+  if(keys.includes(key)) {
+    this.map[key] = value
+  } else {
+    if(keys.length + 1 > this.capacity) {
+      const deleteKey = keys.reduce((acc, cur) => {
+        if(!acc) {
+          return cur;
+        } else {
+          return this.stack[acc] < this.stack[cur] ? acc : cur
+        }
+      }, undefined);
+
+      delete this.map[deleteKey];
+      delete this.stack[deleteKey]
+    } 
+    this.map[key] = value;
+  }
+  this.stack[key] = Date.now();
+  console.log('put', this.stack, this.map);
+};
