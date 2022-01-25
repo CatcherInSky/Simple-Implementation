@@ -37,3 +37,17 @@ LRUCache.prototype.put = function(key, value) {
   this.stack[key] = Date.now();
   console.log('put', this.stack, this.map);
 };
+
+// 进制转换
+const transform = (num, radix) => {
+ if(num === 0) return num;
+ if(!Number.isInteger(num)) return null;
+ let mark = num < 0 ? '-' : '', res = [];
+ num = Math.abs(num);
+ while(num > radix) {
+  res.unshift(num % radix)
+  num = Math.floor(num / radix)
+ }
+ res.unshift(num)
+ return mark + res.join(',')
+}
